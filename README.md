@@ -34,10 +34,7 @@ Using [lazy.nvim](https://lazy.folke.io/):
 Add the component `"gitstatus"` to your lualine configuration. For example:
 
 ```lua
-require("lualine").setup {
-  options = {
-    -- lualine options here
-  },
+require("lualine").setup({
   sections = {
     lualine_a = { "mode" },
     lualine_b = {
@@ -48,26 +45,29 @@ require("lualine").setup {
           { "is_dirty", format = "*" },
         },
         sep = "",
-      }
+      },
     },
     lualine_c = {
-      "gitstatus",
-      sections = {
-        { "ahead", format = "{}↑" },
-        { "behind", format = "{}↓" },
-        { "conflicted", format = "{}!" },
-        { "staged", format = "{}=" },
-        { "untracked", format = "{}+" },
-        { "modified", format = "{}*" },
-        { "renamed", format = "{}~" },
-        { "deleted", format = "{}-" },
+      {
+        "gitstatus",
+        sections = {
+          { "ahead", format = "{}↑" },
+          { "behind", format = "{}↓" },
+          { "conflicted", format = "{}!" },
+          { "staged", format = "{}=" },
+          { "untracked", format = "{}+" },
+          { "modified", format = "{}*" },
+          { "renamed", format = "{}~" },
+          { "deleted", format = "{}-" },
+        },
+        sep = " ",
       },
-      sep = " ",
+      -- other parts here
     },
     -- other sections here
   },
   -- other options here
-}
+})
 ```
 
 Each item in the `sections` table is either a string or a table with the
