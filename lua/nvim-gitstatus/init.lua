@@ -188,32 +188,4 @@ local default_format = {
 	ahead_behind = true,
 }
 
---- Format the git status
---- @param options GitStatusFormat?
---- @return string
-function M.format(options)
-	options = vim.tbl_deep_extend("force", default_format, options or {})
-
-	local status = M.status
-	if not status then
-		return ""
-	end
-
-	local parts = {}
-	if options.ahead_behind then
-		if status.ahead and status.ahead > 0 then
-			table.insert(parts, status.ahead .. "↑")
-		end
-		if status.behind and status.behind > 0 then
-			table.insert(parts, status.behind .. "↓")
-		end
-	end
-
-	if status.modified > 0 then
-		table.insert(parts, status.modified .. "~")
-	end
-
-	return table.concat(parts, " ")
-end
-
 return M
