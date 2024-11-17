@@ -2,13 +2,13 @@
 
 A simple [Neovim](https://neovim.io/) plugin providing a
 [lualine](https://github.com/nvim-lualine/lualine.nvim)
-component to display `git status` in the status line.
+component to display `git status` results in the status line.
 
 ![screenshot](https://github.com/user-attachments/assets/e375c61a-bfe7-454f-99c8-a67a8d033777)
 
-> [!WARNING]
+> [!CAUTION]
 > This plugin is still in early development. It has not been tested extensively
-> and may have unexpected behaviour. Use at your own risk.
+> and may not work as expected.
 
 ## Prerequisites
 
