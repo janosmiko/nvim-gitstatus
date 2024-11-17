@@ -21,11 +21,12 @@ local M = {
 	opts = {
 		--- @type (number|false)?
 		--- @default 30000
-		--- Auto fetch interval in milliseconds. Set to false to disable auto fetch.
+		--- Interval to automatically run `git fetch`, in milliseconds.
+		--- Set to `false` to disable auto fetch.
 		auto_fetch_interval = 30000,
 		--- @type number?
 		--- @default 1000
-		--- Timeout for the git status command in milliseconds.
+		--- Timeout in milliseconds for `git status` to complete before it is killed.
 		git_status_timeout = 1000,
 	},
 	--- @type GitStatus?
