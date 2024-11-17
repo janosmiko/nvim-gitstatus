@@ -43,6 +43,7 @@ function M.setup(opts)
 
 	-- Set up auto commands
 	vim.api.nvim_create_autocmd({
+		"BufEnter", -- When entering a buffer
 		"BufWritePost", -- When saving a file
 		"FileChangedShellPost", -- When a file changes outside of Neovim
 	}, {

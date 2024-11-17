@@ -6,45 +6,62 @@ local hl_id = 1
 
 --- @class GitStatusLualineOptions
 local default_options = {
-	--- @type table<{[1]: string, format?: string, hl?: string}>?
+	--- @type table<string|{[1]: string, format?: string, hl?: string}>?
 	sections = {
 		{ "ahead", format = "{}↑" },
 		{ "behind", format = "{}↓" },
-		{ "staged", format = "{}=" },
 		{ "conflicted", format = "{}!" },
+		{ "staged", format = "{}=" },
 		{ "untracked", format = "{}+" },
 		{ "modified", format = "{}*" },
 		{ "renamed", format = "{}~" },
 		{ "deleted", format = "{}-" },
 	},
+	--- @type string|{[1]: string, hl?: string}?
 	sep = " ",
 }
+
+local function hl_to_hex(hl)
+	if string.match(hl, "^#%x%x%x%x%x%x$") then
+		return hl
+	end
+
+	local hl_info = vim.api.nvim_get_hl(0, {
+		name = hl,
+		link = false,
+		create = false,
+	})
+	if hl_info and hl_info.fg then
+		return string.format("#%06x", hl_info.fg)
+	end
+
+	return ""
+end
 
 function M:create_lualine_hl_groups()
 	local hl_groups = {
 		colorscheme = vim.g.colors_name,
+		gitstatus_default = highlight.create_component_highlight_group({}, "gitstatus_default", self.options),
 	}
 
 	for _, section in ipairs(self.options.sections) do
 		if section.hl then
-			local fg = ""
-			if string.match(section.hl, "^#%x%x%x%x%x%x$") then
-				fg = section.hl
-			else
-				local hl_info = vim.api.nvim_get_hl(0, {
-					name = section.hl,
-					link = false,
-					create = false,
-				})
-				if hl_info and hl_info.fg then
-					fg = string.format("#%06x", hl_info.fg)
-				end
-			end
+			local fg = hl_to_hex(section.hl)
 
 			if fg and section.hl_id then
 				hl_groups[section.hl_id] =
 					highlight.create_component_highlight_group({ fg = fg }, section.hl_id, self.options)
 			end
+		end
+	end
+
+	local sep = self.options.sep
+	if sep and sep.hl then
+		local fg = hl_to_hex(sep.hl)
+
+		if fg and sep["hl_id"] then
+			hl_groups[sep["hl_id"]] =
+				highlight.create_component_highlight_group({ fg = fg }, self.options.sep.hl_id, self.options)
 		end
 	end
 
@@ -59,13 +76,36 @@ function M:init(options)
 
 	-- Assign unique highlight id to each section, for use with lualine
 	for _, section in ipairs(self.options.sections) do
+		if type(section) == "string" then
+			section = { section }
+		end
+
 		if section.hl then
 			section.hl_id = "gitstatus_" .. hl_id
 			hl_id = hl_id + 1
 		end
 	end
 
+	-- Do the same for the separator
+	local sep = self.options.sep or ""
+	if type(sep) == "string" then
+		sep = { sep }
+		self.options.sep = sep
+	end
+
+	if sep.hl then
+		self.options.sep["hl_id"] = "gitstatus_" .. hl_id
+		hl_id = hl_id + 1
+	end
+
 	self.hl_groups = self:create_lualine_hl_groups()
+end
+
+--- @param hl_id string?
+--- @param str string
+function M:highlight_with_lualine(hl_id, str)
+	local hl_string = highlight.component_format_highlight(self.hl_groups[hl_id or "gitstatus_default"])
+	return hl_string .. str
 end
 
 --- @override
@@ -91,19 +131,19 @@ function M:update_status()
 				value = ""
 			end
 
-			local hl_string = ""
-			if section.hl and section.hl_id then
-				hl_string = highlight.component_format_highlight(self.hl_groups[section.hl_id])
-			end
+			local str = section.format or "{}"
+			str = string.gsub(str, "{}", value)
+			str = self:highlight_with_lualine(section.hl_id, str)
 
-			local value_string = section.format or "{}"
-			value_string = string.gsub(value_string, "{}", value)
-
-			table.insert(parts, hl_string .. value_string)
+			table.insert(parts, str)
 		end
 	end
 
-	return table.concat(parts, self.options.sep)
+	local sep_str = ""
+	if self.options.sep[1] ~= "" then
+		sep_str = self:highlight_with_lualine(self.options.sep.hl_id, self.options.sep[1])
+	end
+	return table.concat(parts, sep_str)
 end
 
 return M
