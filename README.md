@@ -6,9 +6,13 @@ component to display `git status` in the status line.
 
 ![screenshot](https://github.com/user-attachments/assets/e375c61a-bfe7-454f-99c8-a67a8d033777)
 
+> [!WARNING]
+> This plugin is still in early development. It has not been tested extensively
+> and may have unexpected behaviour. Use at your own risk.
+
 ## Prerequisites
 
-- Neovim ֫≥ 0.10.0.
+- [Neovim](https://neovim.io/) ≥ 0.10.0.
 - [Git](https://git-scm.com/).
 - [lualine](https://github.com/nvim-lualine/lualine.nvim)
   for status line integration.
@@ -27,7 +31,7 @@ Using [lazy.nvim](https://lazy.folke.io/):
 
 ## Setup
 
-Add the component `gitstatus` to your lualine configuration. For example:
+Add the component `"gitstatus"` to your lualine configuration. For example:
 
 ```lua
 require("lualine").setup {
@@ -75,7 +79,7 @@ following fields:
   - `branch` - The current branch name.
   - `upstream_branch` - The remote branch name.
   - `is_dirty` - A boolean value indicating whether the working directory is
-    dirty. Useful for, e.g., showing a `*` next to the branch name.
+    dirty. Useful for e.g. showing a `*` next to the branch name.
   - `up_to_date` - A boolean value indicating whether the local branch is up to
     date with the remote branch.
   - `up_to_date_and_clean` - Equal to `up_to_date and not is_dirty`. Useful for
@@ -92,14 +96,16 @@ following fields:
   - `untracked` - The number of new items.
 
 - `format: string` (optional) - The format string to use. The variable value is
-  inserted at `{}`.
+  inserted at `{}`. If not provided, the variable value is displayed as is.
 
 - `hl: string` (optional) - The highlight group to use, which is one of the
   following:
 
-  - A string of the form `"#rrggbb"`.
+  - A hex code of the form `"#rrggbb"`.
   - The name of a highlight group. Only the foreground colour of the highlight
     group is used.
+
+  The second option is preferred, as it adapts to different colour schemes.
 
 If the value of a variable is `0` or `false` or an empty string,
 the entire section is omitted.
@@ -107,7 +113,8 @@ the entire section is omitted.
 The `sep` field is either a string or a table with the following fields:
 
 - `[1]: string` - the separator between sections.
-- `hl: string` (optional) - the highlight group to use. See above.
+- `hl: string` (optional) - the highlight group for the separator. See above
+  for the syntax.
 
 ## Options
 
