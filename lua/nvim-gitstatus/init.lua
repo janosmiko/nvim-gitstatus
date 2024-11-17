@@ -1,6 +1,9 @@
 --- @class GitStatus
 --- @field branch string
 --- @field upstream_branch string
+--- @field is_dirty boolean
+--- @field up_to_date boolean
+--- @field up_to_date_and_clean boolean
 --- @field ahead number
 --- @field behind number
 --- @field stashed number
@@ -90,7 +93,6 @@ local function try_get_status(callback)
 			return
 		end
 
-		--- @type GitStatus
 		local status = {
 			branch = "",
 			upstream_branch = "",
@@ -149,6 +151,10 @@ local function try_get_status(callback)
 			end
 		end
 
+		status.is_dirty = status.modified > 0 or status.deleted > 0 or status.renamed > 0 or status.untracked > 0
+		status.up_to_date = status.ahead == 0 and status.behind == 0
+		status.up_to_date_and_clean = status.up_to_date and not status.is_dirty
+
 		M.status = status
 		callback(true, status)
 	end)
@@ -182,10 +188,5 @@ end
 function M.git_fetch()
 	pcall(try_git_fetch)
 end
-
---- @class GitStatusFormat
-local default_format = {
-	ahead_behind = true,
-}
 
 return M
