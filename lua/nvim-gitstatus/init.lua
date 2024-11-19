@@ -28,6 +28,10 @@ local M = {
 		--- @default 1000
 		--- Timeout in milliseconds for `git status` to complete before it is killed.
 		git_status_timeout = 1000,
+		--- @type boolean?
+		--- @default false
+		--- Show debug messages
+		debug = false,
 	},
 	--- @type GitStatus?
 	--- Current git status, or nil if not available
@@ -42,7 +46,28 @@ local M = {
 -- Variables for debouncing the git status command
 local git_status_limit = 1000
 local git_status_is_busy = false
-local git_status_rerun_callback = nil
+
+--- Print debug messages
+--- @param ... string|string[] Either a string, or a list of two strings `{ text, hl_group }`
+local function debug_msg(...)
+	if not M.opts.debug then
+		return
+	end
+
+	local chunks = {}
+	table.insert(chunks, { os.date("%H:%M:%S") .. " gitstatus: ", "Comment" })
+	for _, arg in ipairs({ ... }) do
+		if type(arg) == "table" then
+			table.insert(chunks, arg)
+		elseif type(arg) == "string" then
+			table.insert(chunks, { arg })
+		end
+	end
+
+	vim.defer_fn(function()
+		vim.api.nvim_echo(chunks, true, {})
+	end, 0)
+end
 
 --- Initialize the plugin
 --- @param opts GitStatusOptions?
@@ -53,6 +78,7 @@ function M.setup(opts)
 	-- Set up auto commands
 	vim.api.nvim_create_autocmd({ "DirChanged" }, {
 		callback = function()
+			debug_msg("cwd changed")
 			M.get_and_watch_git_dir()
 			M.update_git_status()
 		end,
@@ -65,9 +91,12 @@ function M.setup(opts)
 		"FileChangedShellPost", -- When a file changes outside of Neovim
 	}, {
 		callback = function()
+			debug_msg("updating git status due to buffer change")
 			M.update_git_status()
 		end,
 	})
+
+	debug_msg("started")
 
 	-- Initialize git status
 	M.get_and_watch_git_dir()
@@ -86,19 +115,16 @@ function M.setup(opts)
 	end
 end
 
---- @param callback fun(success: boolean, status: GitStatus?)
-local function try_get_status(callback)
+local function try_update_status()
+	-- We use a hard throttle here: if git status is already running, we do not
+	-- run it again even after the previous run finishes. This is intentional to
+	-- prevent infinite recursion, since git status will update the .git
+	-- directory, and trigger the watcher, which will call this function again.
 	if git_status_is_busy then
-		-- Update rerun callback to the latest one
-		if git_status_rerun_callback then
-			git_status_rerun_callback(false, nil)
-		end
-		git_status_rerun_callback = callback
 		return
 	end
 
 	git_status_is_busy = true
-	git_status_rerun_callback = nil
 	vim.system({
 		"git",
 		"status",
@@ -110,33 +136,25 @@ local function try_get_status(callback)
 		text = true,
 		timeout = M.opts.git_status_timeout,
 	}, function(obj)
-		local timer = vim.uv.new_timer()
-
-		timer:start(git_status_limit, 0, function()
-			timer:stop()
-			timer:close()
-
+		-- Reset busy flag after delay
+		vim.defer_fn(function()
 			git_status_is_busy = false
-
-			if git_status_rerun_callback then
-				try_get_status(git_status_rerun_callback)
-				return
-			end
-		end)
+		end, git_status_limit)
 
 		-- Terminated by timeout
 		if obj.signal == 15 then
-			callback(false)
+			debug_msg({ "git status timed out", "ErrorMsg" })
 			return
 		end
 
 		-- Other errors, presume not a git repo
 		if obj.code ~= 0 then
+			debug_msg({ "git status failed", "ErrorMsg" })
 			M.status = nil
-			callback(true)
 			return
 		end
 
+		debug_msg("git status successful")
 		local status = {
 			branch = "",
 			upstream_branch = "",
@@ -200,7 +218,6 @@ local function try_get_status(callback)
 		status.up_to_date_and_clean = status.up_to_date and not status.is_dirty
 
 		M.status = status
-		callback(true, status)
 	end)
 end
 
@@ -213,6 +230,9 @@ local function try_git_fetch()
 	}, function(obj)
 		if obj.code == 0 then
 			M.update_git_status()
+			debug_msg("git fetch successful")
+		else
+			debug_msg({ "git fetch failed", "ErrorMsg" })
 		end
 	end)
 end
@@ -220,16 +240,13 @@ end
 --- Update git status asynchronously, and call the callback when done. When
 --- `success` is false, the git status is not updated. This happens when
 --- either the git command times out, or another git command is still running.
---- @param callback fun(success: boolean, status: GitStatus?)?
-function M.update_git_status(callback)
-	callback = callback or function() end
-	if not pcall(try_get_status, callback) then
-		callback(false)
-	end
+function M.update_git_status()
+	pcall(try_update_status)
 end
 
 --- Run git fetch asynchronously
 function M.git_fetch()
+	debug_msg("running git fetch")
 	pcall(try_git_fetch)
 end
 
@@ -244,6 +261,8 @@ local function try_get_and_watch_git_dir()
 		if obj.code == 0 then
 			M.git_dir = vim.trim(obj.stdout)
 			M.watch_git_dir()
+
+			debug_msg("watching git directory:\n", { M.git_dir, "String" })
 		else
 			M.git_dir = nil
 		end
@@ -271,13 +290,13 @@ function M.watch_git_dir()
 		return
 	end
 
-	watcher:start(M.git_dir, {}, function(err, filename, events)
+	watcher:start(M.git_dir, {}, function(err, filename)
 		if err or not filename then
 			return
 		end
-		if events.change or events.rename then
-			M.update_git_status()
-		end
+
+		debug_msg("updating git status due to file change:\n", { ".git/" .. filename, "String" })
+		M.update_git_status()
 	end)
 	M.git_dir_watcher = watcher
 	return watcher
