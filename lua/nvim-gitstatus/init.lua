@@ -105,6 +105,7 @@ local function try_get_status(callback)
 		"--porcelain=2",
 		"--branch",
 		"--show-stash",
+		"--untracked-files=all",
 	}, {
 		text = true,
 		timeout = M.opts.git_status_timeout,
