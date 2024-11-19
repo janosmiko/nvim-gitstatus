@@ -8,7 +8,7 @@ component to display `git status` results in the status line.
 
 > [!CAUTION]
 > This plugin is still in early development. It has not been tested extensively
-> and may not work as expected.
+> and may not work as expected. Use at your own risk.
 
 ## Prerequisites
 
@@ -31,7 +31,7 @@ Using [lazy.nvim](https://lazy.folke.io/):
 
 ## Setup
 
-Add the component `"gitstatus"` to your lualine configuration. For example:
+Add the component `gitstatus` to your lualine configuration. For example:
 
 ```lua
 require("lualine").setup({
@@ -101,9 +101,10 @@ following fields:
 - `hl: string` (optional) - The highlight group to use, which is one of the
   following:
 
-  - A hex code of the form `"#rrggbb"`.
-  - The name of a highlight group. Only the foreground colour of the highlight
-    group is used.
+  - A hex code of the form `#rrggbb`.
+  - The name of a highlight group, such as `Normal`, or `MiniIconsYellow`,
+    etc., if you use [mini.icons](https://github.com/echasnovski/mini.icons).
+    Only the foreground colour of the highlight group is used.
 
   The second option is preferred, as it adapts to different colour schemes.
 
@@ -128,5 +129,8 @@ The plugin comes with the following default options:
 
   --- Timeout in milliseconds for `git status` to complete before it is killed.
   git_status_timeout = 1000,
-},
+
+  --- Whether to show debug messages.
+  debug = false,
+}
 ```
