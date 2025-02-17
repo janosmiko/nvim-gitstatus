@@ -90,8 +90,12 @@ following fields:
   - `deleted` - The number of deleted items.
   - `modified` - The number of modified items.
   - `renamed` - The number of renamed items.
-  - `staged` - The number of staged items, including additions, modifications,
-    and deletions.
+  - `staged` - The number of staged items, including additions, deletions,
+    modifications, and renames.
+  - `staged_added` - The number of staged additions.
+  - `staged_deleted` - The number of staged deletions.
+  - `staged_modified` - The number of staged modifications.
+  - `staged_renamed` - The number of staged renames.
   - `stashed` - The number of stashed items.
   - `untracked` - The number of new items.
 

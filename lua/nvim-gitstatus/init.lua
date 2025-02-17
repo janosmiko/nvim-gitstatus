@@ -12,6 +12,10 @@
 --- @field modified number
 --- @field renamed number
 --- @field staged number
+--- @field staged_added number
+--- @field staged_deleted number
+--- @field staged_modified number
+--- @field staged_renamed number
 --- @field untracked number
 
 --- @class GitStatusPlugin
@@ -166,6 +170,10 @@ local function try_update_status()
 			modified = 0,
 			renamed = 0,
 			staged = 0,
+			staged_added = 0,
+			staged_deleted = 0,
+			staged_modified = 0,
+			staged_renamed = 0,
 			untracked = 0,
 		}
 
@@ -198,6 +206,15 @@ local function try_update_status()
 				local code_y = string.sub(parts[2], 2, 2)
 				if code_x ~= "." then
 					status.staged = status.staged + 1
+					if code_x == "A" then
+						status.staged_added = status.staged_added + 1
+					elseif code_x == "D" then
+						status.staged_deleted = status.staged_deleted + 1
+					elseif code_x == "M" then
+						status.staged_modified = status.staged_modified + 1
+					elseif code_x == "R" then
+						status.staged_renamed = status.staged_renamed + 1
+					end
 				end
 				if code_y == "M" or code_y == "T" then
 					status.modified = status.modified + 1
