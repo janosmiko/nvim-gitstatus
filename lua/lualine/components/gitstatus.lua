@@ -123,18 +123,30 @@ function M:update_status()
 	local parts = {}
 
 	for _, section in ipairs(self.options.sections) do
-		--- @type string|number|boolean?
-		local value = status[section[1]]
-		if value and value ~= 0 then
-			-- Don't show 'true' for boolean values
-			if value == true then
-				value = ""
+		local str = ""
+
+		-- section[1] is either a function or a variable name
+		if type(section[1]) == "function" then
+			local result = section[1](status)
+			if type(result) == "string" then
+				str = result
 			end
+		else
+			--- @type string|number|boolean?
+			local value = status[section[1]]
+			if value and value ~= 0 then
+				-- Don't show 'true' for boolean values
+				if value == true then
+					value = ""
+				end
 
-			local str = section.format or "{}"
-			str = string.gsub(str, "{}", value)
+				str = section.format or "{}"
+				str = string.gsub(str, "{}", value)
+			end
+		end
+
+		if str ~= "" then
 			str = self:highlight_with_lualine(section.hl_id, str)
-
 			table.insert(parts, str)
 		end
 	end

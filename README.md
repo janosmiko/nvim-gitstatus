@@ -73,34 +73,39 @@ require("lualine").setup({
 Each item in the `sections` table is either a string or a table with the
 following fields:
 
-- `[1]: string` - The variable name to display, which must be one of the
-  following:
+- `[1]: string | function` - Either one of the following:
 
-  - `branch` - The current branch name.
-  - `upstream_branch` - The remote branch name.
-  - `is_dirty` - A boolean value indicating whether the working directory is
-    dirty. Useful for e.g. showing a `*` next to the branch name.
-  - `up_to_date` - A boolean value indicating whether the local branch is up to
-    date with the remote branch.
-  - `up_to_date_and_clean` - Equal to `up_to_date and not is_dirty`. Useful for
-    showing a symbol when nothing else is displayed.
-  - `ahead` - The number of commits ahead of the remote branch.
-  - `behind` - The number of commits behind the remote branch.
-  - `conflicted` - The number of conflicted items.
-  - `deleted` - The number of deleted items.
-  - `modified` - The number of modified items.
-  - `renamed` - The number of renamed items.
-  - `staged` - The number of staged items, including additions, deletions,
-    modifications, and renames.
-  - `staged_added` - The number of staged additions.
-  - `staged_deleted` - The number of staged deletions.
-  - `staged_modified` - The number of staged modifications.
-  - `staged_renamed` - The number of staged renames.
-  - `stashed` - The number of stashed items.
-  - `untracked` - The number of new items.
+  - `string` - The variable name to display, which must be one of the
+    following:
 
-- `format: string` (optional) - The format string to use. The variable value is
-  inserted at `{}`. If not provided, the variable value is displayed as is.
+    - `branch` - The current branch name.
+    - `upstream_branch` - The remote branch name.
+    - `is_dirty` - A boolean value indicating whether the working directory is
+      dirty. Useful for e.g. showing a `*` next to the branch name.
+    - `up_to_date` - A boolean value indicating whether the local branch is up to
+      date with the remote branch.
+    - `up_to_date_and_clean` - Equal to `up_to_date and not is_dirty`. Useful for
+      showing a symbol when nothing else is displayed.
+    - `ahead` - The number of commits ahead of the remote branch.
+    - `behind` - The number of commits behind the remote branch.
+    - `conflicted` - The number of conflicted items.
+    - `deleted` - The number of deleted items.
+    - `modified` - The number of modified items.
+    - `renamed` - The number of renamed items.
+    - `staged` - The number of staged items, including additions, deletions,
+      modifications, and renames.
+    - `staged_added` - The number of staged additions.
+    - `staged_deleted` - The number of staged deletions.
+    - `staged_modified` - The number of staged modifications.
+    - `staged_renamed` - The number of staged renames.
+    - `stashed` - The number of stashed items.
+    - `untracked` - The number of new items.
+
+  - `function` - A function which takes an argument `status`, which is a table
+    containing the above values, and returns a `string` to display.
+
+- `format: string` (optional) - The format string to use when `[1]` is a string.
+  The variable value is inserted at `{}`. If not provided, the variable value is displayed as is.
 
 - `hl: string` (optional) - The highlight group to use, which is one of the
   following:
@@ -112,7 +117,7 @@ following fields:
 
   The second option is preferred, as it adapts to different colour schemes.
 
-If the value of a variable is `0` or `false` or an empty string,
+If `[1]` is a string and the value of a variable is `0` or `false` or an empty string,
 the entire section is omitted.
 
 The `sep` field is either a string or a table with the following fields:
