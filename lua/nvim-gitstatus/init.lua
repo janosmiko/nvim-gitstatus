@@ -1,4 +1,5 @@
 --- @class GitStatus
+--- @field commit string
 --- @field branch string
 --- @field upstream_branch string
 --- @field is_dirty boolean
@@ -160,6 +161,7 @@ local function try_update_status()
 
 		debug_msg("git status successful")
 		local status = {
+			commit = "",
 			branch = "",
 			upstream_branch = "",
 			ahead = 0,
@@ -182,7 +184,9 @@ local function try_update_status()
 		for _, line in ipairs(lines) do
 			local parts = vim.split(line, " ")
 			if parts[1] == "#" then
-				if parts[2] == "branch.head" then
+				if parts[2] == "branch.oid" then
+					status.commit = string.sub(parts[3], 1, 6)
+				elseif parts[2] == "branch.head" then
 					status.branch = parts[3]
 				elseif parts[2] == "branch.upstream" then
 					status.upstream_branch = parts[3]
